@@ -1,10 +1,5 @@
-/*
-Example sketch for the Xbox 360 USB library - developed by Kristian Lauszus
-For more information visit my blog: http://blog.tkjelectronics.dk/ or
-send me an e-mail:  kristianl@tkjelectronics.com
-*/
-
 #include <XBOXUSB.h>
+#include <SoftwareSerial.h>
 
 // Satisfy the IDE, which needs to see the include statment in the ino too.
 #ifdef dobogusinclude
@@ -14,9 +9,11 @@ send me an e-mail:  kristianl@tkjelectronics.com
 
 USB Usb;
 XBOXUSB Xbox(&Usb);
+SoftwareSerial bluetoothSerial(2, 3);
 
 void setup() {
 	Serial.begin(115200);
+	bluetoothSerial.begin(38400);
 #if !defined(__MIPSEL__)
 	while (!Serial); // Wait for serial port to connect - used on Leonardo, Teensy and other boards with built-in USB CDC serial connection
 #endif
@@ -26,6 +23,7 @@ void setup() {
 	}
 	Serial.print(F("\r\nXBOX USB Library Started"));
 }
+
 void loop() {
 	Usb.Task();
 	if (Xbox.Xbox360Connected) {
@@ -79,36 +77,30 @@ void loop() {
 			Serial.println(F("Right"));
 		}
 
-		if (Xbox.getButtonClick(START)) {
-			Xbox.setLedMode(ALTERNATING);
-			Serial.println(F("Start"));
-		}
-		if (Xbox.getButtonClick(BACK)) {
-			Xbox.setLedBlink(ALL);
-			Serial.println(F("Back"));
-		}
-		if (Xbox.getButtonClick(L3))
-			Serial.println(F("L3"));
-		if (Xbox.getButtonClick(R3))
-			Serial.println(F("R3"));
-
-		if (Xbox.getButtonClick(L1))
-			Serial.println(F("L1"));
-		if (Xbox.getButtonClick(R1))
-			Serial.println(F("R1"));
-		if (Xbox.getButtonClick(XBOX)) {
-			Xbox.setLedMode(ROTATING);
-			Serial.println(F("Xbox"));
-		}
-
-		if (Xbox.getButtonClick(A))
+		if (Xbox.getButtonClick(A)) {
 			Serial.println(F("A"));
-		if (Xbox.getButtonClick(B))
+			if (bluetoothSerial.available())
+				bluetoothSerial.read();
+			bluetoothSerial.write("");
+		}
+		if (Xbox.getButtonClick(B)) {
 			Serial.println(F("B"));
-		if (Xbox.getButtonClick(X))
+			if (bluetoothSerial.available())
+				bluetoothSerial.read();
+			bluetoothSerial.write("");
+		}
+		if (Xbox.getButtonClick(X)) {
 			Serial.println(F("X"));
-		if (Xbox.getButtonClick(Y))
+			if (bluetoothSerial.available())
+				bluetoothSerial.read();
+			bluetoothSerial.write("");
+		}
+		if (Xbox.getButtonClick(Y)) {
 			Serial.println(F("Y"));
+			if (bluetoothSerial.available())
+				bluetoothSerial.read();
+			bluetoothSerial.write("");
+		}
 	}
 	delay(1);
 }
