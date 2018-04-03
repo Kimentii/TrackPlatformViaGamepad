@@ -1,0 +1,7 @@
+__vm/
+.vs/
+*.sln
+*.vcxproj
+*.filters
+*.xlsx
+*.log
