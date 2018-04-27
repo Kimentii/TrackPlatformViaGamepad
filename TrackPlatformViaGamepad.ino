@@ -7,13 +7,22 @@
 #endif
 #include <SPI.h>
 
+const int BLUETOOTH_SERIAL_SPEED = 9600;
 USB Usb;
 XBOXUSB Xbox(&Usb);
+// 2 - rx, 3 - tx.
 SoftwareSerial bluetoothSerial(2, 3);
+
+void writeConnectCommand() {
+	byte com[] = { 0x03, 0x04, 0x01, 0x04, 0xF2, 0x41 };
+	for (int i = 0; i < 6; i++) {
+		bluetoothSerial.write(com[i]);
+	}
+}
 
 void setup() {
 	Serial.begin(115200);
-	bluetoothSerial.begin(38400);
+	bluetoothSerial.begin(BLUETOOTH_SERIAL_SPEED);
 #if !defined(__MIPSEL__)
 	while (!Serial); // Wait for serial port to connect - used on Leonardo, Teensy and other boards with built-in USB CDC serial connection
 #endif
@@ -27,15 +36,25 @@ void setup() {
 void loop() {
 	Usb.Task();
 	if (Xbox.Xbox360Connected) {
-		if (Xbox.getButtonPress(L2) || Xbox.getButtonPress(R2)) {
-			Serial.print("L2: ");
-			Serial.print(Xbox.getButtonPress(L2));
-			Serial.print("\tR2: ");
-			Serial.println(Xbox.getButtonPress(R2));
-			Xbox.setRumbleOn(Xbox.getButtonPress(L2), Xbox.getButtonPress(R2));
+		Xbox.setRumbleOn(0, 0);
+
+		if (Xbox.getButtonClick(START)) {
+			Xbox.setLedMode(ALTERNATING);
+			Serial.println(F("Start"));
+			// Connecting to robot
+			writeConnectCommand();
+			delay(200);
+			while (bluetoothSerial.available()) {
+				char c = bluetoothSerial.read();
+				Serial.println(c, HEX);
+			}
 		}
-		else
-			Xbox.setRumbleOn(0, 0);
+		if (Xbox.getButtonClick(BACK)) {
+			Xbox.setLedBlink(ALL);
+			Serial.println(F("Back"));
+			// Disconnecting from robot
+			bluetoothSerial.write("040103", HEX);
+		}
 
 		if (Xbox.getAnalogHat(LeftHatX) > 7500 || Xbox.getAnalogHat(LeftHatX) < -7500 || Xbox.getAnalogHat(LeftHatY) > 7500 || Xbox.getAnalogHat(LeftHatY) < -7500 || Xbox.getAnalogHat(RightHatX) > 7500 || Xbox.getAnalogHat(RightHatX) < -7500 || Xbox.getAnalogHat(RightHatY) > 7500 || Xbox.getAnalogHat(RightHatY) < -7500) {
 			if (Xbox.getAnalogHat(LeftHatX) > 7500 || Xbox.getAnalogHat(LeftHatX) < -7500) {
@@ -81,25 +100,25 @@ void loop() {
 			Serial.println(F("A"));
 			if (bluetoothSerial.available())
 				bluetoothSerial.read();
-			bluetoothSerial.write("");
+			bluetoothSerial.write("A");
 		}
 		if (Xbox.getButtonClick(B)) {
 			Serial.println(F("B"));
 			if (bluetoothSerial.available())
 				bluetoothSerial.read();
-			bluetoothSerial.write("");
+			bluetoothSerial.write("B");
 		}
 		if (Xbox.getButtonClick(X)) {
 			Serial.println(F("X"));
 			if (bluetoothSerial.available())
 				bluetoothSerial.read();
-			bluetoothSerial.write("");
+			bluetoothSerial.write("X");
 		}
 		if (Xbox.getButtonClick(Y)) {
 			Serial.println(F("Y"));
 			if (bluetoothSerial.available())
 				bluetoothSerial.read();
-			bluetoothSerial.write("");
+			bluetoothSerial.write("Y");
 		}
 	}
 	delay(1);
