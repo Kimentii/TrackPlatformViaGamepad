@@ -1,5 +1,6 @@
 #include <XBOXUSB.h>
 #include <SoftwareSerial.h>
+#include <FastCRC.h>
 
 // Satisfy the IDE, which needs to see the include statment in the ino too.
 #ifdef dobogusinclude
@@ -7,17 +8,54 @@
 #endif
 #include <SPI.h>
 
+#include "Commands.h"
+
 const int BLUETOOTH_SERIAL_SPEED = 9600;
+const int BUF_SIZE = 255;
+FastCRC16 crc_calculator;
 USB Usb;
 XBOXUSB Xbox(&Usb);
 // 2 - rx, 3 - tx.
 SoftwareSerial bluetoothSerial(2, 3);
 
-void writeConnectCommand() {
-	byte com[] = { 0x03, 0x04, 0x01, 0x04, 0xF2, 0x41 };
-	for (int i = 0; i < 6; i++) {
-		bluetoothSerial.write(com[i]);
+void write_command(uint8_t* command, uint8_t com_length) {
+	uint8_t* command_with_length = new uint8_t[com_length + 1];
+	bluetoothSerial.write(com_length);
+	command_with_length[0] = com_length;
+	for (int i = 0; i < com_length; i++) {
+		bluetoothSerial.write(command[i]);
+		command_with_length[i + 1] = command[i];
 	}
+	uint16_t crc = crc_calculator.modbus(command_with_length, com_length + 1);
+	bluetoothSerial.write((uint8_t)crc);
+	bluetoothSerial.write((uint8_t)(crc >> 8));
+	delete command_with_length;
+}
+
+uint8_t synchronous_read(SoftwareSerial& serial) {
+	int i = 10000;
+	for (; i > 0 && !serial.available(); i--);
+	if (i <= 0) {
+		Serial.print("Read time out.");
+		return -1;
+	}
+	uint8_t com_size = bluetoothSerial.read();
+}
+
+bool read_one_answer() {
+	uint8_t com_size = synchronous_read(bluetoothSerial);
+	char buf[BUF_SIZE] = { 0 };
+	Serial.printf("com_size: %d\n", com_size);
+	for (int i = 0; i < com_size && i < BUF_SIZE; i++) {
+		buf[i] = synchronous_read(bluetoothSerial);
+	}
+	uint16_t crc = (uint8_t)synchronous_read(bluetoothSerial);
+	crc << 8;
+	crc = (uint8_t)synchronous_read(bluetoothSerial);
+	Serial.print("ans: ");
+	Serial.println(buf);
+	Serial.flush();
+	return !strcmp(buf, "OK");
 }
 
 void setup() {
@@ -42,18 +80,17 @@ void loop() {
 			Xbox.setLedMode(ALTERNATING);
 			Serial.println(F("Start"));
 			// Connecting to robot
-			writeConnectCommand();
-			delay(200);
-			while (bluetoothSerial.available()) {
-				char c = bluetoothSerial.read();
-				Serial.println(c, HEX);
-			}
+			write_command(CONNECT, sizeof(CONNECT));
+			read_one_answer();
+			read_one_answer();
 		}
 		if (Xbox.getButtonClick(BACK)) {
 			Xbox.setLedBlink(ALL);
 			Serial.println(F("Back"));
 			// Disconnecting from robot
-			bluetoothSerial.write("040103", HEX);
+			write_command(DISCONNECT, sizeof(DISCONNECT));
+			read_one_answer();
+			read_one_answer();
 		}
 
 		if (Xbox.getAnalogHat(LeftHatX) > 7500 || Xbox.getAnalogHat(LeftHatX) < -7500 || Xbox.getAnalogHat(LeftHatY) > 7500 || Xbox.getAnalogHat(LeftHatY) < -7500 || Xbox.getAnalogHat(RightHatX) > 7500 || Xbox.getAnalogHat(RightHatX) < -7500 || Xbox.getAnalogHat(RightHatY) > 7500 || Xbox.getAnalogHat(RightHatY) < -7500) {
