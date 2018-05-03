@@ -96,22 +96,54 @@ void loop() {
 		if (Xbox.getAnalogHat(LeftHatX) > 7500 || Xbox.getAnalogHat(LeftHatX) < -7500 || Xbox.getAnalogHat(LeftHatY) > 7500 || Xbox.getAnalogHat(LeftHatY) < -7500 || Xbox.getAnalogHat(RightHatX) > 7500 || Xbox.getAnalogHat(RightHatX) < -7500 || Xbox.getAnalogHat(RightHatY) > 7500 || Xbox.getAnalogHat(RightHatY) < -7500) {
 			if (Xbox.getAnalogHat(LeftHatX) > 7500 || Xbox.getAnalogHat(LeftHatX) < -7500) {
 				Serial.print(F("LeftHatX: "));
-				Serial.print(Xbox.getAnalogHat(LeftHatX));
+				uint16_t val = Xbox.getAnalogHat(LeftHatX);
+				float arg = ((float)val / 32768.0) * 255;
+				if (val > 0) {
+					set_command_args(MOVE_RIGHT, sizeof(MOVE_RIGHT), arg);
+					write_command(MOVE_RIGHT, sizeof(MOVE_RIGHT));
+				}
+				else {
+					set_command_args(MOVE_LEFT, sizeof(MOVE_LEFT), arg);
+					write_command(MOVE_LEFT, sizeof(MOVE_LEFT));
+				}
+				Serial.print(val);
 				Serial.print("\t");
 			}
 			if (Xbox.getAnalogHat(LeftHatY) > 7500 || Xbox.getAnalogHat(LeftHatY) < -7500) {
 				Serial.print(F("LeftHatY: "));
-				Serial.print(Xbox.getAnalogHat(LeftHatY));
+				uint16_t val = Xbox.getAnalogHat(LeftHatY);
+				float arg = ((float)val / 32768.0) * 255;
+				if (val > 0) {
+					set_command_args(MOVE_FORWARD, sizeof(MOVE_FORWARD), arg);
+					write_command(MOVE_FORWARD, sizeof(MOVE_FORWARD));
+				}
+				else {
+					set_command_args(MOVE_BACK, sizeof(MOVE_BACK), arg);
+					write_command(MOVE_BACK, sizeof(MOVE_BACK));
+				}
+				Serial.print(val);
 				Serial.print("\t");
 			}
 			if (Xbox.getAnalogHat(RightHatX) > 7500 || Xbox.getAnalogHat(RightHatX) < -7500) {
 				Serial.print(F("RightHatX: "));
-				Serial.print(Xbox.getAnalogHat(RightHatX));
+				uint16_t val = Xbox.getAnalogHat(RightHatX);
+				float arg = ((float)val / 32768.0) * 180;
+				if (val > 0) {
+					set_command_args(SET_SERVO_XY, sizeof(SET_SERVO_XY), arg);
+					write_command(SET_SERVO_XY, sizeof(SET_SERVO_XY));
+				}
+				Serial.print(val);
 				Serial.print("\t");
 			}
 			if (Xbox.getAnalogHat(RightHatY) > 7500 || Xbox.getAnalogHat(RightHatY) < -7500) {
 				Serial.print(F("RightHatY: "));
-				Serial.print(Xbox.getAnalogHat(RightHatY));
+				uint16_t val = Xbox.getAnalogHat(RightHatY);
+				float arg = ((float)val / 32768.0) * 180;
+				if (val > 0) {
+					set_command_args(SET_SERVO_XZ, sizeof(SET_SERVO_XZ), arg);
+					write_command(SET_SERVO_XZ, sizeof(SET_SERVO_XZ));
+				}
+				Serial.print(val);
 			}
 			Serial.println();
 		}
