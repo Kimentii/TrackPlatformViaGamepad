@@ -1,4 +1,4 @@
-#include <XBOXUSB.h>
+﻿#include <XBOXUSB.h>
 #include <SoftwareSerial.h>
 #include <FastCRC.h>
 
@@ -9,6 +9,23 @@
 #include <SPI.h>
 
 #include "Commands.h"
+
+
+// communication
+uint8_t CONNECT[] = { 4,1,4 };
+uint8_t DISCONNECT[] = { 4,2 };
+uint8_t REFRESH_CONNECTION[]{ 4,3 };
+
+// movement commands
+uint8_t MOVE_FORWARD[] = { 1,6,0,0,0 };
+uint8_t MOVE_LEFT[] = { 1,0x0A, '-', 0,0,0 };
+uint8_t MOVE_RIGHT[] = { 1, 0x0A, 0,0,0 };
+uint8_t MOVE_BACK[] = { 1,6,'-',0,0,0 };
+uint8_t STOP_MOVING[] = { 1,5 };
+
+// servo commands
+uint8_t SET_SERVO_XY[] = { 3,5,'1',';',0,0,0 };
+uint8_t SET_SERVO_XZ[] = { 3,5,'2', ';', 0,0,0 };
 
 const int BLUETOOTH_SERIAL_SPEED = 9600;
 const int BUF_SIZE = 255;
@@ -39,7 +56,8 @@ uint8_t synchronous_read(SoftwareSerial& serial) {
 		Serial.print("Read time out.");
 		return -1;
 	}
-	uint8_t com_size = bluetoothSerial.read();
+	uint8_t val = bluetoothSerial.read();
+	return val;
 }
 
 bool read_one_answer() {
@@ -50,7 +68,7 @@ bool read_one_answer() {
 		buf[i] = synchronous_read(bluetoothSerial);
 	}
 	uint16_t crc = (uint8_t)synchronous_read(bluetoothSerial);
-	crc << 8;
+	crc <<= 8;
 	crc = (uint8_t)synchronous_read(bluetoothSerial);
 	Serial.print("ans: ");
 	Serial.println(buf);
@@ -96,13 +114,14 @@ void loop() {
 		if (Xbox.getAnalogHat(LeftHatX) > 7500 || Xbox.getAnalogHat(LeftHatX) < -7500 || Xbox.getAnalogHat(LeftHatY) > 7500 || Xbox.getAnalogHat(LeftHatY) < -7500 || Xbox.getAnalogHat(RightHatX) > 7500 || Xbox.getAnalogHat(RightHatX) < -7500 || Xbox.getAnalogHat(RightHatY) > 7500 || Xbox.getAnalogHat(RightHatY) < -7500) {
 			if (Xbox.getAnalogHat(LeftHatX) > 7500 || Xbox.getAnalogHat(LeftHatX) < -7500) {
 				Serial.print(F("LeftHatX: "));
-				uint16_t val = Xbox.getAnalogHat(LeftHatX);
-				float arg = ((float)val / 32768.0) * 255;
+				int16_t val = Xbox.getAnalogHat(LeftHatX);
 				if (val > 0) {
+					float arg = ((float)val / 32767.0) * 255;
 					set_command_args(MOVE_RIGHT, sizeof(MOVE_RIGHT), arg);
 					write_command(MOVE_RIGHT, sizeof(MOVE_RIGHT));
 				}
 				else {
+					float arg = ((float)val / -32768.0) * 255;
 					set_command_args(MOVE_LEFT, sizeof(MOVE_LEFT), arg);
 					write_command(MOVE_LEFT, sizeof(MOVE_LEFT));
 				}
@@ -111,13 +130,14 @@ void loop() {
 			}
 			if (Xbox.getAnalogHat(LeftHatY) > 7500 || Xbox.getAnalogHat(LeftHatY) < -7500) {
 				Serial.print(F("LeftHatY: "));
-				uint16_t val = Xbox.getAnalogHat(LeftHatY);
-				float arg = ((float)val / 32768.0) * 255;
+				int16_t val = Xbox.getAnalogHat(LeftHatY);
 				if (val > 0) {
+					float arg = ((float)val / 32767.0) * 255;
 					set_command_args(MOVE_FORWARD, sizeof(MOVE_FORWARD), arg);
 					write_command(MOVE_FORWARD, sizeof(MOVE_FORWARD));
 				}
 				else {
+					float arg = ((float)val / -32768.0) * 255;
 					set_command_args(MOVE_BACK, sizeof(MOVE_BACK), arg);
 					write_command(MOVE_BACK, sizeof(MOVE_BACK));
 				}
@@ -126,9 +146,9 @@ void loop() {
 			}
 			if (Xbox.getAnalogHat(RightHatX) > 7500 || Xbox.getAnalogHat(RightHatX) < -7500) {
 				Serial.print(F("RightHatX: "));
-				uint16_t val = Xbox.getAnalogHat(RightHatX);
-				float arg = ((float)val / 32768.0) * 180;
+				int16_t val = Xbox.getAnalogHat(RightHatX);
 				if (val > 0) {
+					float arg = ((float)val / 32768.0) * 180;
 					set_command_args(SET_SERVO_XY, sizeof(SET_SERVO_XY), arg);
 					write_command(SET_SERVO_XY, sizeof(SET_SERVO_XY));
 				}
@@ -137,9 +157,9 @@ void loop() {
 			}
 			if (Xbox.getAnalogHat(RightHatY) > 7500 || Xbox.getAnalogHat(RightHatY) < -7500) {
 				Serial.print(F("RightHatY: "));
-				uint16_t val = Xbox.getAnalogHat(RightHatY);
-				float arg = ((float)val / 32768.0) * 180;
+				int16_t val = Xbox.getAnalogHat(RightHatY);
 				if (val > 0) {
+					float arg = ((float)val / 32768.0) * 180;
 					set_command_args(SET_SERVO_XZ, sizeof(SET_SERVO_XZ), arg);
 					write_command(SET_SERVO_XZ, sizeof(SET_SERVO_XZ));
 				}
@@ -190,5 +210,5 @@ void loop() {
 			bluetoothSerial.write("Y");
 		}
 	}
-	delay(1);
+	delay(100);
 }
