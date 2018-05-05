@@ -1,5 +1,4 @@
 #include "Commands.h"
-
 void set_command_args(uint8_t* command, uint8_t com_size, uint8_t arg) {
 	char val3 = arg % 10 + '0';
 	//Serial.printf("val3: %d\n", val3);
