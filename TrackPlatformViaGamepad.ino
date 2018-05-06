@@ -8,6 +8,7 @@
 #include <SPI.h>
 
 #include "CommandsSender.h"
+#include "DebugSerial.h"
 
 
 const int BLUETOOTH_SERIAL_SPEED = 38400;
@@ -19,15 +20,14 @@ CommandsSender com_sender(&bluetoothSerial);
 
 
 void setup() {
-	Serial.begin(115200);
 #if !defined(__MIPSEL__)
 	while (!Serial); // Wait for serial port to connect - used on Leonardo, Teensy and other boards with built-in USB CDC serial connection
 #endif
 	if (Usb.Init() == -1) {
-		Serial.print(F("\r\nOSC did not start"));
+		DEBUG_PRINT("\r\nOSC did not start");
 		while (1); //halt
 	}
-	Serial.print(F("\r\nXBOX USB Library Started"));
+	DEBUG_PRINTF("\r\nXBOX USB Library Started");
 }
 
 void loop() {
@@ -37,20 +37,20 @@ void loop() {
 
 		if (Xbox.getButtonClick(START)) {
 			Xbox.setLedMode(ALTERNATING);
-			Serial.println(F("Start"));
+			DEBUG_PRINTLN(F("Start"));
 			// Connecting to robot
 			com_sender.connect();
 		}
 		if (Xbox.getButtonClick(BACK)) {
 			Xbox.setLedBlink(ALL);
-			Serial.println(F("Back"));
+			DEBUG_PRINTLN(F("Back"));
 			// Disconnecting from robot
 			com_sender.disconnect();
 		}
 
 		if (Xbox.getAnalogHat(LeftHatX) > 7500 || Xbox.getAnalogHat(LeftHatX) < -7500 || Xbox.getAnalogHat(LeftHatY) > 7500 || Xbox.getAnalogHat(LeftHatY) < -7500 || Xbox.getAnalogHat(RightHatX) > 7500 || Xbox.getAnalogHat(RightHatX) < -7500 || Xbox.getAnalogHat(RightHatY) > 7500 || Xbox.getAnalogHat(RightHatY) < -7500) {
 			if (Xbox.getAnalogHat(LeftHatX) > 7500 || Xbox.getAnalogHat(LeftHatX) < -7500) {
-				Serial.print(F("LeftHatX: "));
+				DEBUG_PRINT(F("LeftHatX: "));
 				int16_t val = Xbox.getAnalogHat(LeftHatX);
 				if (val > 0) {
 					val -= 7500;
@@ -62,11 +62,11 @@ void loop() {
 					float speed = ((float)val / -25268.0) * 255;
 					com_sender.move_left(speed);
 				}
-				Serial.print(val);
-				Serial.print("\t");
+				DEBUG_PRINT(String(val));
+				DEBUG_PRINT("\t");
 			}
 			if (Xbox.getAnalogHat(LeftHatY) > 7500 || Xbox.getAnalogHat(LeftHatY) < -7500) {
-				Serial.print(F("LeftHatY: "));
+				DEBUG_PRINT(F("LeftHatY: "));
 				int16_t val = Xbox.getAnalogHat(LeftHatY);
 				if (val > 0) {
 					val -= 7500;
@@ -78,29 +78,29 @@ void loop() {
 					float speed = ((float)val / -25268.0) * 255;
 					com_sender.move_back(speed);
 				}
-				Serial.print(val);
-				Serial.print("\t");
+				DEBUG_PRINT(String(val));
+				DEBUG_PRINT("\t");
 			}
 			if (Xbox.getAnalogHat(RightHatX) > 7500 || Xbox.getAnalogHat(RightHatX) < -7500) {
-				Serial.print(F("RightHatX: "));
+				DEBUG_PRINT(F("RightHatX: "));
 				int16_t val = Xbox.getAnalogHat(RightHatX);
 				if (val > 0) {
 					float angle = ((float)val / 32768.0) * 180;
 					com_sender.set_xy_servo_angle(angle);
 				}
-				Serial.print(val);
-				Serial.print("\t");
+				DEBUG_PRINT(String(val));
+				DEBUG_PRINT("\t");
 			}
 			if (Xbox.getAnalogHat(RightHatY) > 7500 || Xbox.getAnalogHat(RightHatY) < -7500) {
-				Serial.print(F("RightHatY: "));
+				DEBUG_PRINT(F("RightHatY: "));
 				int16_t val = Xbox.getAnalogHat(RightHatY);
 				if (val > 0) {
 					float angle = ((float)val / 32768.0) * 180;
 					com_sender.set_xz_servo_angle(angle);
 				}
-				Serial.print(val);
+				DEBUG_PRINT(String(val));
 			}
-			Serial.println();
+			DEBUG_PRINTLN("");
 		}
 
 	}

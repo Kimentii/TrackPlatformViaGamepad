@@ -1,5 +1,6 @@
 #pragma once
 #include "Commands.h"
+#include "DebugSerial.h"
 #include <SoftwareSerial.h>
 #include <FastCRC.h>
 
@@ -45,7 +46,7 @@ uint8_t synchronous_read() {
 	int i = 10000;
 	for (; i > 0 && !serial->available(); i--);
 	if (i <= 0) {
-		Serial.print("Read time out.");
+		DEBUG_PRINTLN("Read time out.");
 		return -1;
 	}
 	uint8_t val = serial->read();

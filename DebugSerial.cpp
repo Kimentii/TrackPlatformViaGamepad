@@ -1,5 +1,4 @@
 ﻿#include <stdarg.h>
-#include "../config/Constants.h"
 #include "DebugSerial.h"
 
 #ifdef DEBUG_ON
@@ -12,7 +11,7 @@ DebugSerial::DebugSerial(): IConnector(serial_)
 	if (!isInited)
 	{
 		isInited = true;
-		serial_->begin(Constants::kDbgUartSpeed);
+		serial_->begin(9600);
 	}
 }
 

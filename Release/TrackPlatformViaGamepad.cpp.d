@@ -37,4 +37,7 @@ C:\Users\Kimentii\AppData\Local\Temp\VMBuilds\TrackPlatformViaGamepad\uno\Releas
  C:\Program\ Files\ (x86)\Arduino\hardware\arduino\avr\cores\arduino/Stream.h \
  C:\Users\Kimentii\AppData\Local\Temp\VMBuilds\TrackPlatformViaGamepad\uno\Release\CommandsSender.h \
  C:\Users\Kimentii\AppData\Local\Temp\VMBuilds\TrackPlatformViaGamepad\uno\Release\Commands.h \
+ C:\Users\Kimentii\AppData\Local\Temp\VMBuilds\TrackPlatformViaGamepad\uno\Release\DebugSerial.h \
+ C:\Program\ Files\ (x86)\Arduino\hardware\arduino\avr\cores\arduino/HardwareSerial.h \
+ C:\Users\Kimentii\AppData\Local\Temp\VMBuilds\TrackPlatformViaGamepad\uno\Release\IConnector.h \
  C:\Users\Kimentii\Documents\Arduino\libraries\FastCRC-master/FastCRC.h
