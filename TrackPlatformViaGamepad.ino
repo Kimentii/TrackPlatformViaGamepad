@@ -85,7 +85,8 @@ void loop() {
 				DEBUG_PRINT(F("RightHatX: "));
 				int16_t val = Xbox.getAnalogHat(RightHatX);
 				if (val > 0) {
-					float angle = ((float)val / 32768.0) * 180;
+					val -= 7500;
+					float angle = ((float)val / 25267.0) * 180;
 					com_sender.set_xy_servo_angle(angle);
 				}
 				DEBUG_PRINT(String(val));
@@ -95,7 +96,8 @@ void loop() {
 				DEBUG_PRINT(F("RightHatY: "));
 				int16_t val = Xbox.getAnalogHat(RightHatY);
 				if (val > 0) {
-					float angle = ((float)val / 32768.0) * 180;
+					val -= 7500;
+					float angle = ((float)val / 25267.0) * 180;
 					com_sender.set_xz_servo_angle(angle);
 				}
 				DEBUG_PRINT(String(val));
