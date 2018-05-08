@@ -11,7 +11,7 @@ DebugSerial::DebugSerial(): IConnector(serial_)
 	if (!isInited)
 	{
 		isInited = true;
-		serial_->begin(9600);
+		serial_->begin(115200);
 	}
 }
 

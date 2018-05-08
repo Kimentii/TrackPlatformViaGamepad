@@ -11,12 +11,13 @@
 #include "DebugSerial.h"
 
 
-const int BLUETOOTH_SERIAL_SPEED = 38400;
+//const int BLUETOOTH_SERIAL_SPEED = 38400;
 USB Usb;
 XBOXUSB Xbox(&Usb);
 // 2 - rx, 3 - tx.
 SoftwareSerial bluetoothSerial(2, 3);
 CommandsSender com_sender(&bluetoothSerial);
+bool is_connected = false;
 
 
 void setup() {
@@ -33,34 +34,44 @@ void setup() {
 void loop() {
 	Usb.Task();
 	if (Xbox.Xbox360Connected) {
-		Xbox.setRumbleOn(0, 0);
+		if (is_connected) {
+			//Xbox.setLedBlink(ALL);
+			Xbox.setLedMode(ALTERNATING);
+		}
+		else {
+			Xbox.setLedOn(LED1);
+		}
 
 		if (Xbox.getButtonClick(START)) {
-			Xbox.setLedMode(ALTERNATING);
-			DEBUG_PRINTLN(F("Start"));
+			DEBUG_PRINTLN(F("Connecting..."));
 			// Connecting to robot
-			com_sender.connect();
+			if (!is_connected) {
+				is_connected = com_sender.connect();
+			}
 		}
 		if (Xbox.getButtonClick(BACK)) {
-			Xbox.setLedBlink(ALL);
-			DEBUG_PRINTLN(F("Back"));
+			//Xbox.setLedBlink(ALL);
+			DEBUG_PRINTLN(F("Disconnecting..."));
 			// Disconnecting from robot
-			com_sender.disconnect();
+			bool res = com_sender.disconnect();
+			if (res && is_connected) {
+				is_connected = false;
+			}
 		}
 
-		if (Xbox.getAnalogHat(LeftHatX) > 7500 || Xbox.getAnalogHat(LeftHatX) < -7500 || Xbox.getAnalogHat(LeftHatY) > 7500 || Xbox.getAnalogHat(LeftHatY) < -7500 || Xbox.getAnalogHat(RightHatX) > 7500 || Xbox.getAnalogHat(RightHatX) < -7500 || Xbox.getAnalogHat(RightHatY) > 7500 || Xbox.getAnalogHat(RightHatY) < -7500) {
+		//if (Xbox.getAnalogHat(LeftHatX) > 7500 || Xbox.getAnalogHat(LeftHatX) < -7500 || Xbox.getAnalogHat(LeftHatY) > 7500 || Xbox.getAnalogHat(LeftHatY) < -7500 || Xbox.getAnalogHat(RightHatX) > 7500 || Xbox.getAnalogHat(RightHatX) < -7500 || Xbox.getAnalogHat(RightHatY) > 7500 || Xbox.getAnalogHat(RightHatY) < -7500) {
 			if (Xbox.getAnalogHat(LeftHatX) > 7500 || Xbox.getAnalogHat(LeftHatX) < -7500) {
 				DEBUG_PRINT(F("LeftHatX: "));
 				int16_t val = Xbox.getAnalogHat(LeftHatX);
 				if (val > 0) {
 					val -= 7500;
 					float speed = ((float)val / 25267.0) * 255;
-					com_sender.move_rigth(speed);
+					is_connected = com_sender.move_rigth(speed);
 				}
 				else {
 					val += 7500;
 					float speed = ((float)val / -25268.0) * 255;
-					com_sender.move_left(speed);
+					is_connected = com_sender.move_left(speed);
 				}
 				DEBUG_PRINT(String(val));
 				DEBUG_PRINT("\t");
@@ -71,12 +82,12 @@ void loop() {
 				if (val > 0) {
 					val -= 7500;
 					float speed = ((float)val / 25267.0) * 255;
-					com_sender.move_forward(speed);
+					is_connected = com_sender.move_forward(speed);
 				}
 				else {
 					val += 7500;
 					float speed = ((float)val / -25268.0) * 255;
-					com_sender.move_back(speed);
+					is_connected = com_sender.move_back(speed);
 				}
 				DEBUG_PRINT(String(val));
 				DEBUG_PRINT("\t");
@@ -87,10 +98,13 @@ void loop() {
 				if (val > 0) {
 					val -= 7500;
 					float angle = ((float)val / 25267.0) * 180;
-					com_sender.set_xy_servo_angle(angle);
+					is_connected = com_sender.set_xy_servo_angle(angle);
 				}
 				DEBUG_PRINT(String(val));
 				DEBUG_PRINT("\t");
+			}
+			else {
+				is_connected = com_sender.set_xy_servo_angle(0);
 			}
 			if (Xbox.getAnalogHat(RightHatY) > 7500 || Xbox.getAnalogHat(RightHatY) < -7500) {
 				DEBUG_PRINT(F("RightHatY: "));
@@ -98,13 +112,19 @@ void loop() {
 				if (val > 0) {
 					val -= 7500;
 					float angle = ((float)val / 25267.0) * 180;
-					com_sender.set_xz_servo_angle(angle);
+					is_connected = com_sender.set_xz_servo_angle(angle);
 				}
 				DEBUG_PRINT(String(val));
 			}
+			else {
+				is_connected = com_sender.set_xz_servo_angle(0);
+			}
 			DEBUG_PRINTLN("");
-		}
+		//}
 
+	}
+	else {
+		DEBUG_PRINTLN(String("Xbox is disconnected."));
 	}
 	delay(1);
 }

@@ -20,7 +20,7 @@ uint8_t STOP_MOVING[] = { 1,5 };
 uint8_t SET_SERVO_XY[] = { 3,5,'1',';',0,0,0 };
 uint8_t SET_SERVO_XZ[] = { 3,5,'2', ';', 0,0,0 };
 
-const int SERIAL_SPEED = 9600;
+const int SERIAL_SPEED = 57600;
 const int BUF_SIZE = 255;
 
 class CommandsSender {
@@ -42,37 +42,44 @@ void write_command(uint8_t* command, uint8_t com_length) {
 	delete command_with_length;
 }
 
-uint8_t synchronous_read() {
-	int i = 10000;
-	for (; i > 0 && !serial->available(); i--);
+int synchronous_read() {
+	int i = 100;
+	for (; i > 0 && !serial->available(); i--) delay(1);
 	if (i <= 0) {
 		DEBUG_PRINTLN("Read time out.");
 		return -1;
 	}
-	uint8_t val = serial->read();
+	int val = serial->read();
 	return val;
 }
 
 bool read_one_answer() {
-	uint8_t com_size = synchronous_read();
-	char buf[BUF_SIZE] = { 0 };
-	//Serial.printf("com_size: %d\n", com_size);
-	for (int i = 0; i < com_size && i < BUF_SIZE; i++) {
-		buf[i] = synchronous_read();
+	int com_size = synchronous_read();
+	if (com_size != -1) {
+		char buf[BUF_SIZE] = { 0 };
+		DEBUG_PRINTF("com_size: %d\n", com_size);
+		for (int i = 0; i < com_size && i < BUF_SIZE; i++) {
+			buf[i] = synchronous_read();
+		}
+		uint16_t crc = (uint8_t)synchronous_read();
+		crc <<= 8;
+		crc = (uint8_t)synchronous_read();
+		DEBUG_PRINT(String("ans: "));
+		DEBUG_PRINTLN(String(buf));
+		return !strcmp(buf, "OK");
 	}
-	uint16_t crc = (uint8_t)synchronous_read();
-	crc <<= 8;
-	crc = (uint8_t)synchronous_read();
-	/*Serial.print("ans: ");
-	Serial.println(buf);
-	Serial.flush();*/
-	return !strcmp(buf, "OK");
+	return false;
 }
 
 bool read_two_answer() {
 	bool ans1 = read_one_answer();
-	bool ans2 = read_one_answer();
-	return ans1 && ans2;
+	if (ans1) {
+		bool ans2 = read_one_answer();
+		return ans2;
+	}
+	else {
+		return false;
+	}
 }
 
 public:
